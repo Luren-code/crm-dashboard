@@ -16,6 +16,7 @@
   ## 已实现功能
 
   - [x] 用户认证（注册 / 登录 / 登出）
+  - [x] 后台布局（侧边栏导航 + 顶栏 + 内容区）
   - [ ] 联系人 CRUD
   - [ ] 联系人列表（筛选 / 排序 / 分页）
   - [ ] 公司管理
@@ -41,10 +42,11 @@
   ```
   src/
   ├── components/
-  │   ├── ui/          # Shadcn 基础组件
-  │   └── auth/        # 认证相关组件
+  │   ├── auth/        # 认证相关组件（ProtectedRoute）
+  │   ├── layout/      # 布局组件（AppLayout、Sidebar）
+  │   └── ui/          # Shadcn 基础组件
   ├── contexts/        # React Context（全局状态）
   ├── lib/             # 工具函数 + Supabase client
   ├── pages/           # 页面级组件
-  └── App.tsx          # 路由配置
+  └── App.tsx          # 路由配置（嵌套路由）
   ```
