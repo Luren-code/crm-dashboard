@@ -3,9 +3,12 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
   Pencil,
   Plus,
   Search,
+  Trash2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -19,14 +22,16 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { ContactFormDialog } from "@/components/contacts/ContactFormDialog"
+import { DeleteConfirmDialog } from "@/components/contacts/DeleteConfirmDialog"
 import { useContacts } from "@/hooks/useContacts"
 import { statusConfig, type Contact, type ContactStatus } from "@/types/contact"
 
-// ---- 排序相关类型 ----
+// ---- 类型 ----
 type SortField = "name" | "email" | "status" | "created_at"
 type SortDirection = "asc" | "desc"
 
-// 状态筛选按钮配置
+const PAGE_SIZE = 8 // 每页显示条数
+
 const statusFilters: { value: ContactStatus | "all"; label: string }[] = [
   { value: "all", label: "全部" },
   { value: "lead", label: "潜在" },
@@ -45,20 +50,33 @@ export function ContactsPage() {
     direction: SortDirection
   }>({ field: "created_at", direction: "desc" })
 
-  // 弹窗状态
-  const [dialogOpen, setDialogOpen] = useState(false)
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1)
+
+  // 新增/编辑弹窗状态
+  const [formOpen, setFormOpen] = useState(false)
   const [editingContact, setEditingContact] = useState<Contact | undefined>()
+
+  // 删除弹窗状态
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deletingContact, setDeletingContact] = useState<Contact | undefined>()
 
   // 点击"新增"
   const handleCreate = () => {
-    setEditingContact(undefined) // 清空 → 新增模式
-    setDialogOpen(true)
+    setEditingContact(undefined)
+    setFormOpen(true)
   }
 
   // 点击"编辑"
   const handleEdit = (contact: Contact) => {
-    setEditingContact(contact) // 传入数据 → 编辑模式
-    setDialogOpen(true)
+    setEditingContact(contact)
+    setFormOpen(true)
+  }
+
+  // 点击"删除"
+  const handleDelete = (contact: Contact) => {
+    setDeletingContact(contact)
+    setDeleteOpen(true)
   }
 
   // 点击表头切换排序
@@ -67,6 +85,18 @@ export function ContactsPage() {
       field,
       direction: prev.field === field && prev.direction === "asc" ? "desc" : "asc",
     }))
+    setCurrentPage(1) // 排序变了回第一页
+  }
+
+  // 搜索或筛选变化时回第一页
+  const handleSearchChange = (value: string) => {
+    setSearch(value)
+    setCurrentPage(1)
+  }
+
+  const handleStatusFilterChange = (value: ContactStatus | "all") => {
+    setStatusFilter(value)
+    setCurrentPage(1)
   }
 
   // 渲染排序图标
@@ -107,6 +137,12 @@ export function ContactsPage() {
     return result
   }, [contacts, search, statusFilter, sort])
 
+  // 分页计算
+  const totalPages = Math.max(1, Math.ceil(filteredContacts.length / PAGE_SIZE))
+  const safeCurrentPage = Math.min(currentPage, totalPages)
+  const startIndex = (safeCurrentPage - 1) * PAGE_SIZE
+  const pagedContacts = filteredContacts.slice(startIndex, startIndex + PAGE_SIZE)
+
   return (
     <div className="space-y-4">
       {/* 标题 + 新增按钮 */}
@@ -132,7 +168,7 @@ export function ContactsPage() {
           <Input
             placeholder="搜索姓名或邮箱..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -142,7 +178,7 @@ export function ContactsPage() {
               key={item.value}
               variant={statusFilter === item.value ? "default" : "outline"}
               size="sm"
-              onClick={() => setStatusFilter(item.value)}
+              onClick={() => handleStatusFilterChange(item.value)}
             >
               {item.label}
             </Button>
@@ -173,88 +209,143 @@ export function ContactsPage() {
 
       {/* 数据表格 */}
       {!loading && !error && filteredContacts.length > 0 && (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("name")}
+        <>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => handleSort("name")}
+                  >
+                    <span className="inline-flex items-center">
+                      姓名{renderSortIcon("name")}
+                    </span>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => handleSort("email")}
+                  >
+                    <span className="inline-flex items-center">
+                      邮箱{renderSortIcon("email")}
+                    </span>
+                  </TableHead>
+                  <TableHead>电话</TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => handleSort("status")}
+                  >
+                    <span className="inline-flex items-center">
+                      状态{renderSortIcon("status")}
+                    </span>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => handleSort("created_at")}
+                  >
+                    <span className="inline-flex items-center">
+                      创建时间{renderSortIcon("created_at")}
+                    </span>
+                  </TableHead>
+                  <TableHead className="w-24">操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pagedContacts.map((contact) => {
+                  const status = statusConfig[contact.status]
+                  return (
+                    <TableRow key={contact.id}>
+                      <TableCell className="font-medium">
+                        {contact.name}
+                      </TableCell>
+                      <TableCell>{contact.email ?? "-"}</TableCell>
+                      <TableCell>{contact.phone ?? "-"}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}
+                        >
+                          {status.label}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(contact.created_at).toLocaleDateString(
+                          "zh-CN"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(contact)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(contact)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* 分页控件 */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                第 {startIndex + 1}-
+                {Math.min(startIndex + PAGE_SIZE, filteredContacts.length)} 条，共{" "}
+                {filteredContacts.length} 条
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={safeCurrentPage <= 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
                 >
-                  <span className="inline-flex items-center">
-                    姓名{renderSortIcon("name")}
-                  </span>
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("email")}
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  上一页
+                </Button>
+                <span className="text-sm">
+                  {safeCurrentPage} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={safeCurrentPage >= totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
                 >
-                  <span className="inline-flex items-center">
-                    邮箱{renderSortIcon("email")}
-                  </span>
-                </TableHead>
-                <TableHead>电话</TableHead>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("status")}
-                >
-                  <span className="inline-flex items-center">
-                    状态{renderSortIcon("status")}
-                  </span>
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("created_at")}
-                >
-                  <span className="inline-flex items-center">
-                    创建时间{renderSortIcon("created_at")}
-                  </span>
-                </TableHead>
-                <TableHead className="w-16">操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredContacts.map((contact) => {
-                const status = statusConfig[contact.status]
-                return (
-                  <TableRow key={contact.id}>
-                    <TableCell className="font-medium">
-                      {contact.name}
-                    </TableCell>
-                    <TableCell>{contact.email ?? "-"}</TableCell>
-                    <TableCell>{contact.phone ?? "-"}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}
-                      >
-                        {status.label}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(contact.created_at).toLocaleDateString("zh-CN")}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(contact)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                  下一页
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* 新增/编辑弹窗 */}
       <ContactFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        open={formOpen}
+        onOpenChange={setFormOpen}
         contact={editingContact}
+        onSuccess={refresh}
+      />
+
+      {/* 删除确认弹窗 */}
+      <DeleteConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        contact={deletingContact}
         onSuccess={refresh}
       />
     </div>
