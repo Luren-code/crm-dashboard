@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react"
-import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react"
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Pencil,
+  Plus,
+  Search,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { ContactFormDialog } from "@/components/contacts/ContactFormDialog"
 import { useContacts } from "@/hooks/useContacts"
 import { statusConfig, type Contact, type ContactStatus } from "@/types/contact"
 
@@ -27,9 +35,9 @@ const statusFilters: { value: ContactStatus | "all"; label: string }[] = [
 ]
 
 export function ContactsPage() {
-  const { contacts, loading, error } = useContacts()
+  const { contacts, loading, error, refresh } = useContacts()
 
-  // 三个筛选/排序状态
+  // 筛选/排序状态
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<ContactStatus | "all">("all")
   const [sort, setSort] = useState<{
@@ -37,11 +45,26 @@ export function ContactsPage() {
     direction: SortDirection
   }>({ field: "created_at", direction: "desc" })
 
+  // 弹窗状态
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingContact, setEditingContact] = useState<Contact | undefined>()
+
+  // 点击"新增"
+  const handleCreate = () => {
+    setEditingContact(undefined) // 清空 → 新增模式
+    setDialogOpen(true)
+  }
+
+  // 点击"编辑"
+  const handleEdit = (contact: Contact) => {
+    setEditingContact(contact) // 传入数据 → 编辑模式
+    setDialogOpen(true)
+  }
+
   // 点击表头切换排序
   const handleSort = (field: SortField) => {
     setSort((prev) => ({
       field,
-      // 同一列：切换方向；不同列：默认升序
       direction: prev.field === field && prev.direction === "asc" ? "desc" : "asc",
     }))
   }
@@ -56,11 +79,10 @@ export function ContactsPage() {
     )
   }
 
-  // 核心：筛选 + 排序（useMemo 避免每次渲染都重新计算）
+  // 筛选 + 排序
   const filteredContacts = useMemo(() => {
     let result = [...contacts]
 
-    // 1. 关键字搜索（姓名或邮箱包含关键字）
     if (search.trim()) {
       const keyword = search.toLowerCase()
       result = result.filter(
@@ -70,16 +92,13 @@ export function ContactsPage() {
       )
     }
 
-    // 2. 状态筛选
     if (statusFilter !== "all") {
       result = result.filter((c) => c.status === statusFilter)
     }
 
-    // 3. 排序
     result.sort((a, b) => {
       const valA = a[sort.field] ?? ""
       const valB = b[sort.field] ?? ""
-
       if (valA < valB) return sort.direction === "asc" ? -1 : 1
       if (valA > valB) return sort.direction === "asc" ? 1 : -1
       return 0
@@ -90,18 +109,24 @@ export function ContactsPage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">联系人</h2>
-        <p className="text-sm text-muted-foreground">
-          共 {filteredContacts.length} 条记录
-          {filteredContacts.length !== contacts.length &&
-            `（总共 ${contacts.length} 条）`}
-        </p>
+      {/* 标题 + 新增按钮 */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">联系人</h2>
+          <p className="text-sm text-muted-foreground">
+            共 {filteredContacts.length} 条记录
+            {filteredContacts.length !== contacts.length &&
+              `（总共 ${contacts.length} 条）`}
+          </p>
+        </div>
+        <Button onClick={handleCreate}>
+          <Plus className="mr-1 h-4 w-4" />
+          新增联系人
+        </Button>
       </div>
 
       {/* 搜索 + 状态筛选 */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        {/* 搜索框 */}
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -111,8 +136,6 @@ export function ContactsPage() {
             className="pl-9"
           />
         </div>
-
-        {/* 状态筛选按钮组 */}
         <div className="flex gap-1">
           {statusFilters.map((item) => (
             <Button
@@ -187,6 +210,7 @@ export function ContactsPage() {
                     创建时间{renderSortIcon("created_at")}
                   </span>
                 </TableHead>
+                <TableHead className="w-16">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -209,6 +233,15 @@ export function ContactsPage() {
                     <TableCell className="text-muted-foreground">
                       {new Date(contact.created_at).toLocaleDateString("zh-CN")}
                     </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(contact)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 )
               })}
@@ -216,6 +249,14 @@ export function ContactsPage() {
           </Table>
         </div>
       )}
+
+      {/* 新增/编辑弹窗 */}
+      <ContactFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        contact={editingContact}
+        onSuccess={refresh}
+      />
     </div>
   )
 }
