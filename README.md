@@ -22,7 +22,9 @@
   - [x] 联系人搜索（按姓名 / 邮箱关键字过滤）
   - [x] 联系人状态筛选（全部 / 潜在 / 活跃 / 已流失）
   - [x] 表头点击排序（升序 / 降序切换）
-  - [ ] 联系人 CRUD（新增 / 编辑 / 删除）
+  - [x] 联系人新增 / 编辑（表单弹窗，复用同一组件）
+  - [ ] 联系人删除
+  - [ ] 分页
   - [ ] 公司管理
   - [ ] Dashboard 数据概览
   - [ ] 响应式布局
@@ -47,8 +49,9 @@
   src/
   ├── components/
   │   ├── auth/        # 认证相关组件（ProtectedRoute）
+  │   ├── contacts/    # 联系人相关组件（ContactFormDialog）
   │   ├── layout/      # 布局组件（AppLayout、Sidebar）
-  │   └── ui/          # Shadcn 基础组件（button、card、input、table 等）
+  │   └── ui/          # Shadcn 基础组件（button、card、dialog、input、table 等）
   ├── contexts/        # React Context（全局状态，如 AuthContext）
   ├── hooks/           # 自定义 Hook（如 useContacts）
   ├── lib/             # 工具函数 + Supabase client
