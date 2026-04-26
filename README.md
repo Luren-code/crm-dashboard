@@ -23,8 +23,8 @@
   - [x] 联系人状态筛选（全部 / 潜在 / 活跃 / 已流失）
   - [x] 表头点击排序（升序 / 降序切换）
   - [x] 联系人新增 / 编辑（表单弹窗，复用同一组件）
-  - [ ] 联系人删除
-  - [ ] 分页
+  - [x] 联系人删除（二次确认弹窗）
+  - [x] 分页（客户端分页，每页 8 条；筛选/排序变化时自动回到第 1 页）
   - [ ] 公司管理
   - [ ] Dashboard 数据概览
   - [ ] 响应式布局
@@ -49,7 +49,7 @@
   src/
   ├── components/
   │   ├── auth/        # 认证相关组件（ProtectedRoute）
-  │   ├── contacts/    # 联系人相关组件（ContactFormDialog）
+  │   ├── contacts/    # 联系人相关组件（ContactFormDialog、DeleteConfirmDialog）
   │   ├── layout/      # 布局组件（AppLayout、Sidebar）
   │   └── ui/          # Shadcn 基础组件（button、card、dialog、input、table 等）
   ├── contexts/        # React Context（全局状态，如 AuthContext）
