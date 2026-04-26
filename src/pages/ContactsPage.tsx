@@ -140,7 +140,7 @@ export function ContactsPage() {
   // 分页计算
   const totalPages = Math.max(1, Math.ceil(filteredContacts.length / PAGE_SIZE))
   const safeCurrentPage = Math.min(currentPage, totalPages)
-  const startIndex = (safeCurrentPage - 2) * PAGE_SIZE
+  const startIndex = (safeCurrentPage - 1) * PAGE_SIZE
   const pagedContacts = filteredContacts.slice(startIndex, startIndex + PAGE_SIZE)
 
   return (
