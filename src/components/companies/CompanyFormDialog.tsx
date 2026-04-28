@@ -14,19 +14,23 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/contexts/AuthContext"
 import { supabase } from "@/lib/supabase"
+import type { Company } from "@/types/company"
 
 interface CompanyFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess: () => void // 保存成功后刷新列表
+  company?: Company // 有值 = 编辑模式，没值 = 新增模式
+  onSuccess: () => void
 }
 
 export function CompanyFormDialog({
   open,
   onOpenChange,
+  company,
   onSuccess,
 }: CompanyFormDialogProps) {
   const { user } = useAuth()
+  const isEdit = !!company
 
   // 表单状态
   const [name, setName] = useState("")
@@ -34,14 +38,14 @@ export function CompanyFormDialog({
   const [website, setWebsite] = useState("")
   const [saving, setSaving] = useState(false)
 
-  // 弹窗每次打开时清空表单
+  // 弹窗打开时：编辑模式预填，新增模式清空
   useEffect(() => {
     if (open) {
-      setName("")
-      setIndustry("")
-      setWebsite("")
+      setName(company?.name ?? "")
+      setIndustry(company?.industry ?? "")
+      setWebsite(company?.website ?? "")
     }
-  }, [open])
+  }, [open, company])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -53,17 +57,31 @@ export function CompanyFormDialog({
       website: website.trim() || null,
     }
 
-    const { error } = await supabase
-      .from("companies")
-      .insert({ ...formData, user_id: user!.id })
+    if (isEdit) {
+      const { error } = await supabase
+        .from("companies")
+        .update(formData)
+        .eq("id", company.id)
 
-    if (error) {
-      toast.error("新增失败：" + error.message)
-      setSaving(false)
-      return
+      if (error) {
+        toast.error("更新失败：" + error.message)
+        setSaving(false)
+        return
+      }
+      toast.success("公司已更新")
+    } else {
+      const { error } = await supabase
+        .from("companies")
+        .insert({ ...formData, user_id: user!.id })
+
+      if (error) {
+        toast.error("新增失败：" + error.message)
+        setSaving(false)
+        return
+      }
+      toast.success("公司已添加")
     }
 
-    toast.success("公司已添加")
     setSaving(false)
     onOpenChange(false)
     onSuccess()
@@ -73,8 +91,10 @@ export function CompanyFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>新增公司</DialogTitle>
-          <DialogDescription>填写公司信息并保存</DialogDescription>
+          <DialogTitle>{isEdit ? "编辑公司" : "新增公司"}</DialogTitle>
+          <DialogDescription>
+            {isEdit ? "修改公司信息" : "填写公司信息并保存"}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
