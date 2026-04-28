@@ -25,7 +25,7 @@
   - [x] 联系人新增 / 编辑（表单弹窗，复用同一组件）
   - [x] 联系人删除（二次确认弹窗）
   - [x] 分页（客户端分页，每页 8 条；筛选/排序变化时自动回到第 1 页）
-  - [ ] 公司管理
+  - [x] 公司管理（CRUD + 搜索 + 排序 + 分页，结构与联系人模块对称）
   - [ ] Dashboard 数据概览
   - [ ] 响应式布局
 
@@ -50,10 +50,11 @@
   ├── components/
   │   ├── auth/        # 认证相关组件（ProtectedRoute）
   │   ├── contacts/    # 联系人相关组件（ContactFormDialog、DeleteConfirmDialog）
+  │   ├── companies/   # 公司相关组件（CompanyFormDialog、DeleteConfirmDialog）
   │   ├── layout/      # 布局组件（AppLayout、Sidebar）
   │   └── ui/          # Shadcn 基础组件（button、card、dialog、input、table 等）
   ├── contexts/        # React Context（全局状态，如 AuthContext）
-  ├── hooks/           # 自定义 Hook（如 useContacts）
+  ├── hooks/           # 自定义 Hook（useContacts、useCompanies）
   ├── lib/             # 工具函数 + Supabase client
   ├── pages/           # 页面级组件
   ├── types/           # TypeScript 类型定义
