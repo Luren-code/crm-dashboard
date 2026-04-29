@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/contexts/AuthContext"
+import { useCompanies } from "@/hooks/useCompanies"
 import { supabase } from "@/lib/supabase"
 import type { Contact, ContactStatus } from "@/types/contact"
 
@@ -31,12 +32,14 @@ export function ContactFormDialog({
   onSuccess,
 }: ContactFormDialogProps) {
   const { user } = useAuth()
+  const { companies, loading: companiesLoading } = useCompanies()
   const isEdit = !!contact
 
   // 表单状态
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
+  const [companyId, setCompanyId] = useState("") // "" 表示"无公司"，提交时转 null
   const [status, setStatus] = useState<ContactStatus>("lead")
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
@@ -47,6 +50,7 @@ export function ContactFormDialog({
       setName(contact?.name ?? "")
       setEmail(contact?.email ?? "")
       setPhone(contact?.phone ?? "")
+      setCompanyId(contact?.company_id ?? "")
       setStatus(contact?.status ?? "lead")
       setNotes(contact?.notes ?? "")
     }
@@ -60,6 +64,7 @@ export function ContactFormDialog({
       name: name.trim(),
       email: email.trim() || null,
       phone: phone.trim() || null,
+      company_id: companyId || null, // 空字符串转 null
       status,
       notes: notes.trim() || null,
     }
@@ -142,6 +147,25 @@ export function ContactFormDialog({
               onChange={(e) => setPhone(e.target.value)}
               placeholder="13800138000"
             />
+          </div>
+
+          {/* 所属公司 */}
+          <div className="space-y-2">
+            <Label htmlFor="company">所属公司</Label>
+            <select
+              id="company"
+              value={companyId}
+              onChange={(e) => setCompanyId(e.target.value)}
+              disabled={companiesLoading}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="">无</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* 状态 */}

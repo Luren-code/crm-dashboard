@@ -6,9 +6,15 @@ export interface Contact {
   name: string
   email: string | null
   phone: string | null
+  company_id: string | null
   status: ContactStatus
   notes: string | null
   created_at: string
+}
+
+// useContacts 用嵌套 select 把公司名一起拉回来后的形状
+export interface ContactWithCompany extends Contact {
+  companies: { name: string } | null
 }
 
 // 状态的中文显示 + 颜色样式

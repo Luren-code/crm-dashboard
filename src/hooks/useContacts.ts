@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react"
 
 import { supabase } from "@/lib/supabase"
-import type { Contact } from "@/types/contact"
+import type { ContactWithCompany } from "@/types/contact"
 
 export function useContacts() {
-  const [contacts, setContacts] = useState<Contact[]>([])
+  const [contacts, setContacts] = useState<ContactWithCompany[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -13,15 +13,17 @@ export function useContacts() {
     setLoading(true)
     setError(null)
 
+    // "*, companies(name)" = 拉 contacts 全部列，加上外键关联的公司名
+    // 依赖 contacts.company_id → companies.id 的外键约束
     const { data, error } = await supabase
       .from("contacts")
-      .select("*")
+      .select("*, companies(name)")
       .order("created_at", { ascending: false })
 
     if (error) {
       setError(error.message)
     } else {
-      setContacts(data ?? [])
+      setContacts((data ?? []) as ContactWithCompany[])
     }
     setLoading(false)
   }, [])

@@ -118,7 +118,8 @@ export function ContactsPage() {
       result = result.filter(
         (c) =>
           c.name.toLowerCase().includes(keyword) ||
-          (c.email && c.email.toLowerCase().includes(keyword))
+          (c.email && c.email.toLowerCase().includes(keyword)) ||
+          (c.companies?.name && c.companies.name.toLowerCase().includes(keyword))
       )
     }
 
@@ -166,7 +167,7 @@ export function ContactsPage() {
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="搜索姓名或邮箱..."
+            placeholder="搜索姓名、邮箱或公司..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
@@ -231,6 +232,7 @@ export function ContactsPage() {
                     </span>
                   </TableHead>
                   <TableHead>电话</TableHead>
+                  <TableHead>公司</TableHead>
                   <TableHead
                     className="cursor-pointer select-none"
                     onClick={() => handleSort("status")}
@@ -260,6 +262,9 @@ export function ContactsPage() {
                       </TableCell>
                       <TableCell>{contact.email ?? "-"}</TableCell>
                       <TableCell>{contact.phone ?? "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {contact.companies?.name ?? "-"}
+                      </TableCell>
                       <TableCell>
                         <span
                           className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}
