@@ -96,7 +96,7 @@ export function DashboardPage() {
                     {config.label}
                   </span>
                   <span className="text-muted-foreground">
-                    {count} 条（{percent.toFixed(1)}%）
+                    {count} 条({percent.toFixed(1)}%)
                   </span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
