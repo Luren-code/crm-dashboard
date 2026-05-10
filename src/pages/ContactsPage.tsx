@@ -11,6 +11,9 @@ import {
   Trash2,
 } from "lucide-react"
 
+import { EmptyState } from "@/components/common/EmptyState"
+import { ErrorState } from "@/components/common/ErrorState"
+import { LoadingState } from "@/components/common/LoadingState"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -61,34 +64,30 @@ export function ContactsPage() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deletingContact, setDeletingContact] = useState<Contact | undefined>()
 
-  // 点击"新增"
   const handleCreate = () => {
     setEditingContact(undefined)
     setFormOpen(true)
   }
 
-  // 点击"编辑"
   const handleEdit = (contact: Contact) => {
     setEditingContact(contact)
     setFormOpen(true)
   }
 
-  // 点击"删除"
   const handleDelete = (contact: Contact) => {
     setDeletingContact(contact)
     setDeleteOpen(true)
   }
 
-  // 点击表头切换排序
   const handleSort = (field: SortField) => {
     setSort((prev) => ({
       field,
-      direction: prev.field === field && prev.direction === "asc" ? "desc" : "asc",
+      direction:
+        prev.field === field && prev.direction === "asc" ? "desc" : "asc",
     }))
     setCurrentPage(1) // 排序变了回第一页
   }
 
-  // 搜索或筛选变化时回第一页
   const handleSearchChange = (value: string) => {
     setSearch(value)
     setCurrentPage(1)
@@ -99,7 +98,6 @@ export function ContactsPage() {
     setCurrentPage(1)
   }
 
-  // 渲染排序图标
   const renderSortIcon = (field: SortField) => {
     if (sort.field !== field) return <ArrowUpDown className="ml-1 h-3 w-3" />
     return sort.direction === "asc" ? (
@@ -146,8 +144,8 @@ export function ContactsPage() {
 
   return (
     <div className="space-y-4">
-      {/* 标题 + 新增按钮 */}
-      <div className="flex items-center justify-between">
+      {/* 标题 + 新增按钮 —— 小屏堆叠避免按钮被挤出去 */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">联系人</h2>
           <p className="text-sm text-muted-foreground">
@@ -156,7 +154,7 @@ export function ContactsPage() {
               `（总共 ${contacts.length} 条）`}
           </p>
         </div>
-        <Button onClick={handleCreate}>
+        <Button onClick={handleCreate} className="sm:self-auto self-start">
           <Plus className="mr-1 h-4 w-4" />
           新增联系人
         </Button>
@@ -173,7 +171,7 @@ export function ContactsPage() {
             className="pl-9"
           />
         </div>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
           {statusFilters.map((item) => (
             <Button
               key={item.value}
@@ -187,32 +185,22 @@ export function ContactsPage() {
         </div>
       </div>
 
-      {/* 加载态 */}
-      {loading && (
-        <div className="rounded-md border p-8 text-center text-muted-foreground">
-          加载中...
-        </div>
-      )}
+      {loading && <LoadingState />}
+      {error && <ErrorState error={error} />}
 
-      {/* 错误态 */}
-      {error && (
-        <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-          加载失败：{error}
-        </div>
-      )}
-
-      {/* 空态 */}
       {!loading && !error && filteredContacts.length === 0 && (
-        <div className="rounded-md border p-8 text-center text-muted-foreground">
-          {contacts.length === 0 ? "暂无联系人数据" : "没有匹配的结果"}
-        </div>
+        <EmptyState
+          message={
+            contacts.length === 0 ? "暂无联系人数据" : "没有匹配的结果"
+          }
+        />
       )}
 
-      {/* 数据表格 */}
       {!loading && !error && filteredContacts.length > 0 && (
         <>
-          <div className="rounded-md border">
-            <Table>
+          {/* overflow-x-auto：小屏列装不下时横向滚动而不是挤变形 */}
+          <div className="rounded-md border overflow-x-auto">
+            <Table className="min-w-[760px]">
               <TableHeader>
                 <TableRow>
                   <TableHead
@@ -304,7 +292,7 @@ export function ContactsPage() {
 
           {/* 分页控件 */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
               <p className="text-sm text-muted-foreground">
                 第 {startIndex + 1}-
                 {Math.min(startIndex + PAGE_SIZE, filteredContacts.length)} 条，共{" "}
@@ -338,15 +326,12 @@ export function ContactsPage() {
         </>
       )}
 
-      {/* 新增/编辑弹窗 */}
       <ContactFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
         contact={editingContact}
         onSuccess={refresh}
       />
-
-      {/* 删除确认弹窗 */}
       <DeleteConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}

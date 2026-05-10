@@ -11,6 +11,9 @@ import {
   Trash2,
 } from "lucide-react"
 
+import { EmptyState } from "@/components/common/EmptyState"
+import { ErrorState } from "@/components/common/ErrorState"
+import { LoadingState } from "@/components/common/LoadingState"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -35,25 +38,20 @@ const PAGE_SIZE = 8
 export function CompaniesPage() {
   const { companies, loading, error, refresh } = useCompanies()
 
-  // 筛选/排序状态
   const [search, setSearch] = useState("")
   const [sort, setSort] = useState<{
     field: SortField
     direction: SortDirection
   }>({ field: "created_at", direction: "desc" })
 
-  // 分页状态
   const [currentPage, setCurrentPage] = useState(1)
 
-  // 新增/编辑弹窗状态
   const [formOpen, setFormOpen] = useState(false)
   const [editingCompany, setEditingCompany] = useState<Company | undefined>()
 
-  // 删除弹窗状态
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deletingCompany, setDeletingCompany] = useState<Company | undefined>()
 
-  // ---- 事件处理 ----
   const handleCreate = () => {
     setEditingCompany(undefined)
     setFormOpen(true)
@@ -92,7 +90,6 @@ export function CompaniesPage() {
     )
   }
 
-  // ---- 筛选 + 排序 ----
   const filteredCompanies = useMemo(() => {
     let result = [...companies]
 
@@ -116,7 +113,6 @@ export function CompaniesPage() {
     return result
   }, [companies, search, sort])
 
-  // ---- 分页 ----
   const totalPages = Math.max(
     1,
     Math.ceil(filteredCompanies.length / PAGE_SIZE)
@@ -131,7 +127,7 @@ export function CompaniesPage() {
   return (
     <div className="space-y-4">
       {/* 标题 + 新增按钮 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">公司</h2>
           <p className="text-sm text-muted-foreground">
@@ -140,7 +136,7 @@ export function CompaniesPage() {
               `（总共 ${companies.length} 条）`}
           </p>
         </div>
-        <Button onClick={handleCreate}>
+        <Button onClick={handleCreate} className="sm:self-auto self-start">
           <Plus className="mr-1 h-4 w-4" />
           新增公司
         </Button>
@@ -159,32 +155,19 @@ export function CompaniesPage() {
         </div>
       </div>
 
-      {/* 加载态 */}
-      {loading && (
-        <div className="rounded-md border p-8 text-center text-muted-foreground">
-          加载中...
-        </div>
-      )}
+      {loading && <LoadingState />}
+      {error && <ErrorState error={error} />}
 
-      {/* 错误态 */}
-      {error && (
-        <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-          加载失败：{error}
-        </div>
-      )}
-
-      {/* 空态 */}
       {!loading && !error && filteredCompanies.length === 0 && (
-        <div className="rounded-md border p-8 text-center text-muted-foreground">
-          {companies.length === 0 ? "暂无公司数据" : "没有匹配的结果"}
-        </div>
+        <EmptyState
+          message={companies.length === 0 ? "暂无公司数据" : "没有匹配的结果"}
+        />
       )}
 
-      {/* 数据表格 */}
       {!loading && !error && filteredCompanies.length > 0 && (
         <>
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md border overflow-x-auto">
+            <Table className="min-w-[640px]">
               <TableHeader>
                 <TableRow>
                   <TableHead
@@ -263,9 +246,8 @@ export function CompaniesPage() {
             </Table>
           </div>
 
-          {/* 分页控件 */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
               <p className="text-sm text-muted-foreground">
                 第 {startIndex + 1}-
                 {Math.min(startIndex + PAGE_SIZE, filteredCompanies.length)}{" "}
@@ -299,15 +281,12 @@ export function CompaniesPage() {
         </>
       )}
 
-      {/* 新增/编辑弹窗 */}
       <CompanyFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
         company={editingCompany}
         onSuccess={refresh}
       />
-
-      {/* 删除确认弹窗 */}
       <DeleteConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
