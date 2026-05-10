@@ -7,9 +7,14 @@ const navItems = [
   { to: "/companies", icon: Building2, label: "公司" },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  // 移动端抽屉点击导航后需要关闭抽屉，桌面端不传
+  onNavigate?: () => void
+}
+
+export function Sidebar({ onNavigate }: SidebarProps) {
   return (
-    <aside className="flex h-screen w-56 flex-col border-r bg-card">
+    <aside className="flex h-full w-56 flex-col border-r bg-card">
       {/* Logo 区域 */}
       <div className="flex h-14 items-center border-b px-4">
         <h1 className="text-lg font-bold">CRM Dashboard</h1>
@@ -21,7 +26,8 @@ export function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.to === "/"}   //嵌套路由时起作用
+            end={item.to === "/"} // 嵌套路由时让 / 不会"始终高亮"
+            onClick={onNavigate}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                 isActive
