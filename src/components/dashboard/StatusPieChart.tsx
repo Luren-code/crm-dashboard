@@ -78,7 +78,10 @@ export function StatusPieChart({ distribution }: StatusPieChartProps) {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value, name) => [`${value} 条`, String(name)]}
+                formatter={(value: unknown, name: unknown) => [
+                  `${String(value)} 条`,
+                  String(name),
+                ]}
               />
               <Legend />
             </PieChart>

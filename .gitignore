@@ -8,6 +8,9 @@ dist
 dist-ssr
 *.local
 
+# TypeScript incremental build cache (本地缓存，不应进 git)
+*.tsbuildinfo
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

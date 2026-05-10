@@ -61,7 +61,7 @@ export function MonthlyTrendBarChart({ data }: MonthlyTrendBarChartProps) {
               />
               <Tooltip
                 cursor={{ fill: "var(--muted)", opacity: 0.4 }}
-                formatter={(value) => [`${value} 条`, "新增"]}
+                formatter={(value: unknown) => [`${String(value)} 条`, "新增"]}
               />
               <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             </BarChart>
