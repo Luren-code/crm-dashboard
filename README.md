@@ -7,6 +7,9 @@
 ## 功能预览
 
 > 在线 Demo：<https://crm-dashboard-t8jl.vercel.app/>
+>
+> 登录页点 **「使用演示账号一键登录」** 即可进入塞满测试数据的 Dashboard，无需注册。
+> （账号：`demo@crm-dashboard.app` / 密码：`demo12345678`）
 
 ### Dashboard 数据概览(统计卡片 + 状态分布饼图 + 月度趋势柱状图)
 ![Dashboard 概览](docs/screenshots/dashboard-overview.png)

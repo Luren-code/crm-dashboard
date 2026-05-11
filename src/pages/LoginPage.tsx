@@ -15,12 +15,18 @@ import {
 } from "@/components/ui/card"
 import { useAuth } from "@/contexts/AuthContext"
 
+// 公开演示账号——README 里也会列出，方便招聘者一键体验
+// 安全说明：账号受 Supabase RLS 保护，访客只能读写该 demo 用户的数据
+const DEMO_EMAIL = "demo@crm-dashboard.app"
+const DEMO_PASSWORD = "demo12345678"
+
 export function LoginPage() {
   const { signIn } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [submitting, setSubmitting] = useState(false)
+  const [demoSubmitting, setDemoSubmitting] = useState(false)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -36,6 +42,22 @@ export function LoginPage() {
       setSubmitting(false)
     }
   }
+
+  const handleDemoLogin = async () => {
+    setDemoSubmitting(true)
+    try {
+      await signIn(DEMO_EMAIL, DEMO_PASSWORD)
+      toast.success("已进入演示账号")
+      navigate("/", { replace: true })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "演示登录失败"
+      toast.error(message)
+    } finally {
+      setDemoSubmitting(false)
+    }
+  }
+
+  const busy = submitting || demoSubmitting
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
@@ -71,9 +93,33 @@ export function LoginPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" className="w-full" disabled={submitting}>
+            <Button type="submit" className="w-full" disabled={busy}>
               {submitting ? "登录中..." : "登录"}
             </Button>
+
+            {/* 分隔线 */}
+            <div className="relative w-full">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-card px-2 text-muted-foreground">或</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={busy}
+              onClick={handleDemoLogin}
+            >
+              {demoSubmitting ? "进入中..." : "使用演示账号一键登录 →"}
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              演示账号已预填测试数据，无需注册
+            </p>
+
             <p className="text-center text-sm text-muted-foreground">
               还没有账号？{" "}
               <Link
