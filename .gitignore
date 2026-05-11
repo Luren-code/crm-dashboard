@@ -26,3 +26,9 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Claude Code 本地工作目录（skills 等个人配置，不入公开仓库）
+.claude/
+
+# 根目录的粘贴贴图（贴截图时自动落地的临时文件）
+/image*.png
